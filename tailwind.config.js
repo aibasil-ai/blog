@@ -1,8 +1,8 @@
-import typography from '@tailwindcss/typography'
+const typography = require('@tailwindcss/typography')
 
 /** @type {import('tailwindcss').Config} */
-export default {
-  content: ['./index.html', './src/**/*.{ts,tsx,mdx}'],
+module.exports = {
+  content: ['./src/**/*.{ts,tsx,mdx}'],
   theme: {
     extend: {
       fontFamily: {
