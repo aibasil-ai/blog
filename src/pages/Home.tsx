@@ -177,7 +177,8 @@ function Home() {
                   </div>
                 </div>
               </li>
-            )}
+            )
+          })}
         </ul>
         <div className="flex justify-center">
           <Button asChild>
