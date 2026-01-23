@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async'
-import { useLocation } from 'react-router-dom'
+import Head from 'next/head'
+import { useRouter } from 'next/router'
 import site from '../config/site'
 
 type SeoProps = {
@@ -10,14 +10,14 @@ type SeoProps = {
 }
 
 function Seo({ title, description, type = 'website', image }: SeoProps) {
-  const { pathname } = useLocation()
+  const { asPath } = useRouter()
   const metaTitle = title ? `${title} | ${site.name}` : site.name
   const metaDescription = description ?? site.description
-  const url = new URL(pathname, site.url).toString()
+  const url = new URL(asPath ?? '/', site.url).toString()
   const imageUrl = new URL(image ?? site.ogImage, site.url).toString()
 
   return (
-    <Helmet>
+    <Head>
       <title>{metaTitle}</title>
       <meta name="description" content={metaDescription} />
       <meta property="og:title" content={metaTitle} />
@@ -31,7 +31,7 @@ function Seo({ title, description, type = 'website', image }: SeoProps) {
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={imageUrl} />
       <link rel="canonical" href={url} />
-    </Helmet>
+    </Head>
   )
 }
 

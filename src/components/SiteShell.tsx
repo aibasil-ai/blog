@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 
 type SiteShellProps = {
   children: ReactNode
@@ -23,35 +23,35 @@ function SiteShell({ children }: SiteShellProps) {
         <div className="page-shell mx-auto flex min-h-[var(--header-height)] flex-wrap items-center justify-between gap-6 py-3">
           <Link
             className="text-base font-semibold text-neutral-700 hover:text-neutral-900"
-            to="/"
+            href="/"
           >
             Josh 筆記
           </Link>
           <nav className="flex flex-wrap items-center gap-5 text-base text-neutral-700">
             <Link
               className="hover:text-neutral-900 hover:underline hover:decoration-brand-400 hover:decoration-2 hover:underline-offset-4"
-              to="/posts"
+              href="/posts"
             >
               所有文章
             </Link>
             <Link
               className="hover:text-neutral-900 hover:underline hover:decoration-brand-400 hover:decoration-2 hover:underline-offset-4"
-              to="/subscribe"
+              href="/subscribe"
             >
               訂閱
             </Link>
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.label}
                 className="hover:text-neutral-900 hover:underline hover:decoration-brand-400 hover:decoration-2 hover:underline-offset-4"
                 href={item.href}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
             <Link
               className="hover:text-neutral-900 hover:underline hover:decoration-brand-400 hover:decoration-2 hover:underline-offset-4"
-              to="/about"
+              href="/about"
             >
               關於
             </Link>
@@ -66,22 +66,22 @@ function SiteShell({ children }: SiteShellProps) {
 
         <footer className="mt-16 space-y-4 text-sm text-neutral-600">
           <nav className="flex flex-wrap gap-6 text-base font-medium text-neutral-700">
-            <a
+            <Link
               className="hover:text-neutral-900 hover:underline hover:decoration-brand-400 hover:decoration-2 hover:underline-offset-4"
               href="/#topics"
             >
               標籤
-            </a>
-            <a
+            </Link>
+            <Link
               className="hover:text-neutral-900 hover:underline hover:decoration-brand-400 hover:decoration-2 hover:underline-offset-4"
               href="/#topics"
             >
               分類
-            </a>
+            </Link>
           </nav>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p>2026 Josh 筆記風格部落格</p>
-            <p className="text-xs">以 Vite & React 製作</p>
+            <p className="text-xs">以 Next.js 製作</p>
           </div>
         </footer>
       </div>

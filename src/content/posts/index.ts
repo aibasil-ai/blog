@@ -1,4 +1,13 @@
 import type { ComponentType } from 'react'
+import QuietInteraction, {
+  frontmatter as quietInteractionFrontmatter,
+} from './quiet-interaction.mdx'
+import ReadingRhythm, {
+  frontmatter as readingRhythmFrontmatter,
+} from './reading-rhythm.mdx'
+import WritingWorkflow, {
+  frontmatter as writingWorkflowFrontmatter,
+} from './writing-workflow.mdx'
 
 export type Frontmatter = {
   title: string
@@ -21,13 +30,6 @@ export type Post = {
   Component: ComponentType
 }
 
-type PostModule = {
-  default: ComponentType
-  frontmatter: Frontmatter
-}
-
-const postModules = import.meta.glob<PostModule>('./*.mdx', { eager: true })
-
 function formatDisplayDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
@@ -36,28 +38,41 @@ function formatDisplayDate(value: string) {
   return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`
 }
 
-function getSlug(path: string) {
-  const parts = path.split('/')
-  return parts[parts.length - 1].replace('.mdx', '')
-}
-
-const posts = Object.entries(postModules)
-  .map(([path, module]) => {
-    const frontmatter = module.frontmatter
-
-    return {
-      slug: getSlug(path),
-      title: frontmatter.title,
-      description: frontmatter.description,
-      date: frontmatter.date,
-      displayDate: formatDisplayDate(frontmatter.date),
-      readTime: frontmatter.readTime,
-      tags: frontmatter.tags ?? [],
-      featured: frontmatter.featured ?? false,
-      Component: module.default,
-    }
-  })
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+const posts: Post[] = [
+  {
+    slug: 'quiet-interaction',
+    title: quietInteractionFrontmatter.title,
+    description: quietInteractionFrontmatter.description,
+    date: quietInteractionFrontmatter.date,
+    displayDate: formatDisplayDate(quietInteractionFrontmatter.date),
+    readTime: quietInteractionFrontmatter.readTime,
+    tags: quietInteractionFrontmatter.tags ?? [],
+    featured: quietInteractionFrontmatter.featured ?? false,
+    Component: QuietInteraction,
+  },
+  {
+    slug: 'reading-rhythm',
+    title: readingRhythmFrontmatter.title,
+    description: readingRhythmFrontmatter.description,
+    date: readingRhythmFrontmatter.date,
+    displayDate: formatDisplayDate(readingRhythmFrontmatter.date),
+    readTime: readingRhythmFrontmatter.readTime,
+    tags: readingRhythmFrontmatter.tags ?? [],
+    featured: readingRhythmFrontmatter.featured ?? false,
+    Component: ReadingRhythm,
+  },
+  {
+    slug: 'writing-workflow',
+    title: writingWorkflowFrontmatter.title,
+    description: writingWorkflowFrontmatter.description,
+    date: writingWorkflowFrontmatter.date,
+    displayDate: formatDisplayDate(writingWorkflowFrontmatter.date),
+    readTime: writingWorkflowFrontmatter.readTime,
+    tags: writingWorkflowFrontmatter.tags ?? [],
+    featured: writingWorkflowFrontmatter.featured ?? false,
+    Component: WritingWorkflow,
+  },
+].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
 const tagSet = new Set<string>()
 posts.forEach((post) => post.tags.forEach((tag) => tagSet.add(tag)))
