@@ -36,6 +36,14 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({
+      success: false,
+      error: '此功能僅在本地開發環境中可用'
+    })
+  }
+
   if (req.method !== 'DELETE') {
     return res.status(405).json({ success: false, error: '只接受 DELETE 請求' })
   }

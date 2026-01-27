@@ -128,9 +128,20 @@ function ManagePosts() {
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
   }
 
+  const isProduction = process.env.NODE_ENV === 'production'
+
   return (
     <SiteShell>
       <Seo title="文章管理" description="管理部落格文章" />
+
+      {isProduction && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-900">
+            ⚠️ 文章管理功能僅在本地開發環境中可用。在生產環境中，文件系統為唯讀狀態，無法建立、編輯或刪除文章。
+          </p>
+        </div>
+      )}
+
       <section className="rounded-lg border border-neutral-200 bg-card p-8">
         <div className="space-y-6">
           <div className="flex items-center justify-between">

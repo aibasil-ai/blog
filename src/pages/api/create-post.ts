@@ -28,6 +28,14 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<SuccessResponse | ErrorResponse>
 ) {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({
+      success: false,
+      error: '此功能僅在本地開發環境中可用'
+    })
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: '只允許 POST 方法' })
   }
