@@ -49,4 +49,4 @@ MDX 文章存放在 `src/content/posts/`，每篇文章需：
 ### 設定檔
 
 - 網站資訊（名稱、描述、URL）在 `src/config/site.ts`
-- MDX 解析設定在 `next.config.js`（使用 remark-frontmatter）
+- MDX 解析設定在 `next.config.mjs`（使用 remark-frontmatter）
