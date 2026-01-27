@@ -1,5 +1,6 @@
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
+import remarkBreaks from 'remark-breaks'
 import createMDX from '@next/mdx'
 
 const withMDX = createMDX({
@@ -8,6 +9,7 @@ const withMDX = createMDX({
     remarkPlugins: [
       remarkFrontmatter,
       [remarkMdxFrontmatter, { name: 'frontmatter' }],
+      remarkBreaks,
     ],
   },
 })

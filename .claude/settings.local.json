@@ -6,7 +6,8 @@
       "Bash(git config:*)",
       "Bash(wsl -d Ubuntu -- bash -c \"cd /home/joshlin/AI/blog && yarn dev\":*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(wsl -d Ubuntu -- bash -c \"cd /home/joshlin/AI/blog && rm -rf .next && yarn dev\")"
     ]
   }
 }

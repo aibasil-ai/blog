@@ -8,6 +8,9 @@ import ReadingRhythm, {
 import WritingWorkflow, {
   frontmatter as writingWorkflowFrontmatter,
 } from './writing-workflow.mdx'
+import ASDF, {
+  frontmatter as aSDFFrontmatter,
+} from './a-s-d-f.mdx'
 
 export type Frontmatter = {
   title: string
@@ -39,6 +42,17 @@ function formatDisplayDate(value: string) {
 }
 
 const posts: Post[] = [
+  {
+    slug: 'a-s-d-f',
+    title: aSDFFrontmatter.title,
+    description: aSDFFrontmatter.description,
+    date: aSDFFrontmatter.date,
+    displayDate: formatDisplayDate(aSDFFrontmatter.date),
+    readTime: aSDFFrontmatter.readTime,
+    tags: aSDFFrontmatter.tags ?? [],
+    featured: aSDFFrontmatter.featured ?? false,
+    Component: ASDF,
+  },
   {
     slug: 'quiet-interaction',
     title: quietInteractionFrontmatter.title,
@@ -72,7 +86,7 @@ const posts: Post[] = [
     featured: writingWorkflowFrontmatter.featured ?? false,
     Component: WritingWorkflow,
   },
-].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+]
 
 const tagSet = new Set<string>()
 posts.forEach((post) => post.tags.forEach((tag) => tagSet.add(tag)))
