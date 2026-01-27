@@ -1,0 +1,57 @@
+---
+title: "解放 AI 生產力：如何在 Claude Code for VS Code 開啟全自動執行模式 (Auto-Approve)"
+description: "教你四招設定 Claude Code 自動執行權限 (Auto-Approve)。透過快捷鍵或設定檔繞過繁瑣確認，實現真正的 AI 自動化編程。使用此模式前，請務必搭配 Git 版本控制以確保安全。"
+date: "2026-01-27"
+readTime: "6分鐘"
+tags:
+  - Claude Code
+  - VS Code
+  - AI工具
+featured: true
+---
+
+在使用 Claude Code for VS Code 進行開發時，雖然 AI 寫程式的能力很強大，但預設的安全機制往往讓人感到「卡卡的」。每當 Claude 想要執行終端機指令（Terminal Command）或是修改檔案時，系統都會跳出視窗詢問你是否同意。
+
+如果你正在進行快速迭代，或者希望讓 AI 自行處理一連串繁瑣的重構任務，這種頻繁的確認機制會大幅降低效率。
+
+這篇文章將分享 **4 種繞過詢問權限的方法**，讓 Claude 進入「Auto-Approve」（或俗稱的 YOLO Mode）模式，實現真正的全自動編寫。
+
+> **⚠️ 高風險操作警告**
+>
+> 開啟此功能意味著 Claude 可以 **不經確認直接執行終端機指令（包含刪除檔案）或修改程式碼**。
+>
+> 強烈建議在 **Git Repository** 中使用此功能。在讓 Claude 開始執行一連串全自動任務前，請務必先執行 `git commit` 保存當前進度。如果 AI 誤刪了檔案或寫壞了程式碼，你可以隨時透過 `git reset` 或是 `git checkout` 復原。
+
+## 方法一：透過 VS Code 設定開啟 (官方推薦)
+
+這是最正規的整合方式，適合希望長期保持此設定的使用者。通常這個選項被稱為「Dangerously Skip Permissions」（危險略過權限）。
+
+1.  開啟 VS Code 設定面板（快捷鍵 `Ctrl` + `,` 或 Mac 上的 `Cmd` + `,`）。
+2.  在搜尋框輸入關鍵字 `Claude Code`。
+3.  找到 **"Claude Code: Allow Dangerously Skip Permissions"** 選項並將其勾選。
+4.  （選用）如果看到 **"Auto-accept edits"** 的相關開關，也建議一併啟用。
+
+## 方法二：使用鍵盤快捷鍵切換 (最快速)
+
+如果你不想改動全域設定，只是想在這次會話中暫時放權給 AI，使用終端機快捷鍵是最靈活的方式。
+
+當你在 VS Code 的整合終端機 (Integrated Terminal) 執行 Claude Code CLI 時：
+
+* **快捷鍵：** 按下 `Shift` + `Tab`
+* **功能說明：** 這個組合鍵會在以下三種模式間循環切換：
+    1.  **Normal Mode (預設模式)**：為了安全，每次操作都需要人工確認。
+    2.  **Auto-Accept Mode (自動接受模式)**：這就是你要的功能。系統會提示 "accept edits on"，此時所有的 Bash 指令與檔案修改都會直接執行，不再詢問。
+    3.  **Plan Mode (計畫模式)**：這是一種唯讀模式，AI 只會進行規劃與思考，不會執行任何實際操作。
+
+## 方法三：專案級別的設定檔 (針對特定專案)
+
+如果你只希望在特定的專案（例如個人的實驗性專案）開啟全自動模式，而在公司專案保持嚴格權限，可以使用設定檔來管理。
+
+1.  在該專案的根目錄下，建立一個名為 `.claude` 的資料夾。
+2.  在該資料夾內，建立一個檔案 `settings.json`。
+3.  將以下 JSON 程式碼貼入檔案中：
+
+```json
+{
+  "bypassPermissions": true
+}

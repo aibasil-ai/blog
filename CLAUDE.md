@@ -24,7 +24,7 @@ MDX 文章存放在 `src/content/posts/`，每篇文章需：
    title: "文章標題"
    description: "描述"
    date: "2026-01-01"
-   readTime: "5 分鐘"
+   readTime: "5"  # 只需輸入數字，「分鐘」會自動帶入
    tags:
      - 標籤一
    featured: false

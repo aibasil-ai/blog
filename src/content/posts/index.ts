@@ -8,9 +8,9 @@ import ReadingRhythm, {
 import WritingWorkflow, {
   frontmatter as writingWorkflowFrontmatter,
 } from './writing-workflow.mdx'
-import ASDF, {
-  frontmatter as aSDFFrontmatter,
-} from './a-s-d-f.mdx'
+import JFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVE, {
+  frontmatter as jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter,
+} from './j-f-a-i-s-c-l-r-h-z-c-l-a-u-d-e-c-o-d-e-f-o-r-v-s-c-o-d-e-k-q-q-z-d-z-x-m-s-a-u-t-o-a-p-p-r-o-v-e.mdx'
 
 export type Frontmatter = {
   title: string
@@ -43,15 +43,15 @@ function formatDisplayDate(value: string) {
 
 const posts: Post[] = [
   {
-    slug: 'a-s-d-f',
-    title: aSDFFrontmatter.title,
-    description: aSDFFrontmatter.description,
-    date: aSDFFrontmatter.date,
-    displayDate: formatDisplayDate(aSDFFrontmatter.date),
-    readTime: aSDFFrontmatter.readTime,
-    tags: aSDFFrontmatter.tags ?? [],
-    featured: aSDFFrontmatter.featured ?? false,
-    Component: ASDF,
+    slug: 'j-f-a-i-s-c-l-r-h-z-c-l-a-u-d-e-c-o-d-e-f-o-r-v-s-c-o-d-e-k-q-q-z-d-z-x-m-s-a-u-t-o-a-p-p-r-o-v-e',
+    title: jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.title,
+    description: jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.description,
+    date: jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.date,
+    displayDate: formatDisplayDate(jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.date),
+    readTime: jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.readTime,
+    tags: jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.tags ?? [],
+    featured: jFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVEFrontmatter.featured ?? false,
+    Component: JFAISCLRHZCLAUDECODEFORVSCODEKQQZDZXMSAUTOAPPROVE,
   },
   {
     slug: 'quiet-interaction',
