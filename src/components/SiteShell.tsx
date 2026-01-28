@@ -22,7 +22,7 @@ function SiteShell({ children }: SiteShellProps) {
       <header className="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur">
         <div className="page-shell mx-auto flex min-h-[var(--header-height)] flex-wrap items-center justify-between gap-6 py-3">
           <Link
-            className="text-base font-semibold text-neutral-700 hover:text-neutral-900"
+            className="text-xl font-semibold text-neutral-700 hover:text-neutral-900"
             href="/"
           >
             Josh 筆記

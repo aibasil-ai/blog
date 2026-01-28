@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import SiteShell from '../components/SiteShell'
 import Seo from '../components/Seo'
 import { Button } from '../components/ui/button'
@@ -92,9 +93,11 @@ function Home() {
     <SiteShell>
       <Seo />
       <section className="flex flex-col items-center text-center">
-        <img
+        <Image
           src="/avatar.svg"
           alt="Josh 頭像"
+          width={128}
+          height={128}
           className="mb-4 h-32 w-32 rounded-full border border-neutral-200 object-cover"
         />
         <h1 className="text-4xl font-extrabold text-neutral-900">Josh</h1>
