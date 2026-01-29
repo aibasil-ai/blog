@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import SiteShell from '../../../src/components/SiteShell'
 import Seo from '../../../src/components/Seo'
+import MarkdownEditor from '../../../src/components/MarkdownEditor'
 import { Button } from '../../../src/components/ui/button'
 
 function getTodayDate(): string {
@@ -28,40 +30,6 @@ type SubmitStatus = {
   slug?: string
 }
 
-type UploadStatus = {
-  type: 'idle' | 'uploading' | 'success' | 'error'
-  message?: string
-}
-
-// 簡易 Markdown 轉 HTML（僅處理圖片和基本語法）
-function renderMarkdownPreview(content: string): string {
-  let html = content
-    // 轉義 HTML
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    // 圖片
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full rounded-lg my-4" />')
-    // 標題
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-extrabold mt-8 mb-4">$1</h1>')
-    // 粗體與斜體
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // 行內程式碼
-    .replace(/`([^`]+)`/g, '<code class="bg-neutral-100 px-1 rounded text-sm">$1</code>')
-    // 引用
-    .replace(/^> (.+)$/gm, '<blockquote class="border-l-4 border-neutral-300 pl-4 italic text-neutral-600 my-4">$1</blockquote>')
-    // 分隔線
-    .replace(/^---$/gm, '<hr class="my-6 border-neutral-200" />')
-    // 換行
-    .replace(/\n\n/g, '</p><p class="my-3">')
-    .replace(/\n/g, '<br />')
-
-  return `<div class="prose prose-neutral max-w-none"><p class="my-3">${html}</p></div>`
-}
-
 function NewPost() {
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -77,13 +45,10 @@ function NewPost() {
   const [slugEdited, setSlugEdited] = useState(false)
   const [slugLoading, setSlugLoading] = useState(false)
   const [status, setStatus] = useState<SubmitStatus>({ type: 'idle' })
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ type: 'idle' })
-  const [isDragging, setIsDragging] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 自動從標題產生 slug
+  const isProduction = process.env.NODE_ENV === 'production'
+
   useEffect(() => {
     if (slugEdited || !formData.title) {
       return
@@ -140,97 +105,6 @@ function NewPost() {
     }))
   }
 
-  // 上傳圖片
-  const uploadImage = useCallback(async (file: File) => {
-    if (!formData.slug) {
-      setUploadStatus({ type: 'error', message: '請先輸入標題或 slug' })
-      return
-    }
-
-    setUploadStatus({ type: 'uploading', message: '上傳中...' })
-
-    const formDataObj = new FormData()
-    formDataObj.append('image', file)
-    formDataObj.append('slug', formData.slug)
-
-    try {
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formDataObj,
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        // 在游標位置插入 Markdown 圖片語法
-        const textarea = textareaRef.current
-        if (textarea) {
-          const start = textarea.selectionStart
-          const end = textarea.selectionEnd
-          const before = formData.content.substring(0, start)
-          const after = formData.content.substring(end)
-          const imageMarkdown = `![${file.name}](${data.url})`
-
-          setFormData((prev) => ({
-            ...prev,
-            content: before + imageMarkdown + after,
-          }))
-
-          // 移動游標到插入的圖片後面
-          setTimeout(() => {
-            textarea.focus()
-            const newPos = start + imageMarkdown.length
-            textarea.setSelectionRange(newPos, newPos)
-          }, 0)
-        }
-        setUploadStatus({ type: 'success', message: '圖片已上傳' })
-        setTimeout(() => setUploadStatus({ type: 'idle' }), 2000)
-      } else {
-        setUploadStatus({ type: 'error', message: data.error })
-      }
-    } catch (err) {
-      setUploadStatus({
-        type: 'error',
-        message: `上傳失敗：${err instanceof Error ? err.message : String(err)}`,
-      })
-    }
-  }, [formData.slug, formData.content])
-
-  // 處理檔案選擇
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      uploadImage(file)
-    }
-    // 清除 input 以允許重複選擇相同檔案
-    e.target.value = ''
-  }, [uploadImage])
-
-  // 拖放處理
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-
-    const files = e.dataTransfer.files
-    if (files.length > 0) {
-      const file = files[0]
-      if (file.type.startsWith('image/')) {
-        uploadImage(file)
-      } else {
-        setUploadStatus({ type: 'error', message: '請拖入圖片檔案' })
-      }
-    }
-  }, [uploadImage])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus({ type: 'loading' })
@@ -281,176 +155,200 @@ function NewPost() {
   }
 
   const inputClass =
-    'w-full rounded-md border border-neutral-300 bg-background px-3 py-2 text-sm text-foreground placeholder:text-neutral-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20'
+    'w-full rounded-xl border border-neutral-200 bg-white/80 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300/30'
+
+  const readOnlyHint = slugLoading ? '翻譯中...' : 'article-slug'
 
   return (
     <SiteShell>
       <Seo title="新增文章" description="建立新的部落格文章" />
-      <section className="rounded-lg border border-neutral-200 bg-card p-8">
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <p className="text-sm uppercase tracking-wide text-neutral-600">
-              New Post
+
+      {isProduction && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">
+            ⚠️ 文章管理功能僅在本地開發環境中可用，生產環境無法建立或更新內容。
+          </p>
+        </div>
+      )}
+
+      <section className="animate-fade-up relative overflow-hidden rounded-2xl border border-neutral-200 bg-gradient-to-br from-white via-neutral-50 to-brand-50/40 p-8 shadow-sm">
+        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-100/60 blur-3xl" />
+        <div className="absolute -left-20 bottom-0 h-48 w-48 rounded-full bg-neutral-100 blur-3xl" />
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div className="space-y-3">
+              <div className="signature-badge">Content Studio</div>
+              <h1 className="text-3xl font-semibold text-neutral-900 md:text-4xl">
+                新增文章
+              </h1>
+              <p className="max-w-2xl text-base text-neutral-600">
+                用完整的 Markdown 編輯器建立新文章，支援即時預覽與圖片上傳。
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/manage-posts">
+                <Button variant="outline">返回管理</Button>
+              </Link>
+              <Link href="/posts">
+                <Button variant="ghost">前台瀏覽</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <form onSubmit={handleSubmit} className="animate-fade-up delay-1 space-y-6">
+        {status.type === 'success' && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-sm font-semibold text-emerald-800">
+              {status.message}
             </p>
-            <h1 className="text-3xl font-extrabold text-neutral-900">
-              新增文章
-            </h1>
-            <p className="max-w-2xl text-base text-neutral-700">
-              填寫下方表單以建立新文章。發布後會自動建立 MDX 檔案並更新索引。
+            <a
+              href={`/posts/${status.slug}`}
+              className="mt-2 inline-block text-sm font-semibold text-emerald-700 underline hover:text-emerald-900"
+            >
+              查看文章 →
+            </a>
+          </div>
+        )}
+
+        {status.type === 'error' && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-800">
+              {status.message}
             </p>
           </div>
+        )}
 
-          {status.type === 'success' && (
-            <div className="rounded-md border border-green-200 bg-green-50 p-4">
-              <p className="text-sm font-medium text-green-800">
-                {status.message}
-              </p>
-              <a
-                href={`/posts/${status.slug}`}
-                className="mt-2 inline-block text-sm font-medium text-green-700 underline hover:text-green-900"
+        <section className="rounded-2xl border border-neutral-200 bg-white/90 p-6 shadow-sm">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <label
+                htmlFor="title"
+                className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
               >
-                查看文章 →
-              </a>
+                標題
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                value={formData.title}
+                onChange={handleChange}
+                className={`${inputClass} mt-2 text-lg font-semibold`}
+                placeholder="輸入文章標題"
+              />
             </div>
-          )}
-
-          {status.type === 'error' && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-4">
-              <p className="text-sm font-medium text-red-800">
-                {status.message}
+            <div>
+              <label
+                htmlFor="slug"
+                className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                Slug
+                {slugLoading && (
+                  <span className="ml-2 text-xs text-neutral-400">生成中...</span>
+                )}
+              </label>
+              <input
+                type="text"
+                id="slug"
+                name="slug"
+                required
+                value={formData.slug}
+                onChange={handleChange}
+                className={`${inputClass} mt-2`}
+                placeholder={readOnlyHint}
+              />
+              <p className="mt-2 text-xs text-neutral-500">
+                用於網址路徑，可手動調整
               </p>
             </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  htmlFor="title"
-                  className="text-sm font-medium text-neutral-700"
-                >
-                  標題 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  required
-                  value={formData.title}
-                  onChange={handleChange}
-                  className={inputClass}
-                  placeholder="文章標題"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="slug"
-                  className="text-sm font-medium text-neutral-700"
-                >
-                  Slug <span className="text-red-500">*</span>
-                  {slugLoading && (
-                    <span className="ml-2 text-xs text-neutral-400">翻譯中...</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  id="slug"
-                  name="slug"
-                  required
-                  value={formData.slug}
-                  onChange={handleChange}
-                  className={inputClass}
-                  placeholder={slugLoading ? '翻譯中...' : 'article-slug'}
-                />
-                <p className="text-xs text-neutral-500">
-                  自動將標題翻譯為英文，可手動修改
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
+            <div className="lg:col-span-2">
               <label
                 htmlFor="description"
-                className="text-sm font-medium text-neutral-700"
+                className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
               >
-                描述 <span className="text-red-500">*</span>
+                描述
               </label>
               <textarea
                 id="description"
                 name="description"
                 required
-                rows={2}
+                rows={3}
                 value={formData.description}
                 onChange={handleChange}
-                className={inputClass}
-                placeholder="文章的簡短描述"
+                className={`${inputClass} mt-2 resize-none`}
+                placeholder="簡短說明這篇文章的重點"
               />
             </div>
+          </div>
+        </section>
 
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="space-y-2">
-                <label
-                  htmlFor="date"
-                  className="text-sm font-medium text-neutral-700"
-                >
-                  日期 <span className="text-red-500">*</span>
-                </label>
+        <section className="rounded-2xl border border-neutral-200 bg-white/90 p-6 shadow-sm">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div>
+              <label
+                htmlFor="date"
+                className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                日期
+              </label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                required
+                value={formData.date}
+                onChange={handleChange}
+                className={`${inputClass} mt-2`}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="readTime"
+                className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                閱讀時間
+              </label>
+              <div className="mt-2 flex items-center gap-2">
                 <input
-                  type="date"
-                  id="date"
-                  name="date"
+                  type="number"
+                  id="readTime"
+                  name="readTime"
                   required
-                  value={formData.date}
+                  min="1"
+                  value={formData.readTime}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={`${inputClass} w-24`}
+                  placeholder="5"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="readTime"
-                  className="text-sm font-medium text-neutral-700"
-                >
-                  閱讀時間 <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    id="readTime"
-                    name="readTime"
-                    required
-                    min="1"
-                    value={formData.readTime}
-                    onChange={handleChange}
-                    className={`${inputClass} w-24`}
-                    placeholder="5"
-                  />
-                  <span className="text-sm text-neutral-600">分鐘</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="tags"
-                  className="text-sm font-medium text-neutral-700"
-                >
-                  標籤
-                </label>
-                <input
-                  type="text"
-                  id="tags"
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleChange}
-                  className={inputClass}
-                  placeholder="標籤一, 標籤二"
-                />
-                <p className="text-xs text-neutral-500">以逗號分隔多個標籤</p>
+                <span className="text-sm text-neutral-600">分鐘</span>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
+            <div>
+              <label
+                htmlFor="tags"
+                className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                標籤
+              </label>
+              <input
+                type="text"
+                id="tags"
+                name="tags"
+                value={formData.tags}
+                onChange={handleChange}
+                className={`${inputClass} mt-2`}
+                placeholder="標籤一, 標籤二"
+              />
+              <p className="mt-2 text-xs text-neutral-500">
+                以逗號分隔多個標籤
+              </p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700">
               <input
                 type="checkbox"
                 id="featured"
@@ -459,145 +357,60 @@ function NewPost() {
                 onChange={handleChange}
                 className="h-4 w-4 rounded border-neutral-300 text-brand-500 focus:ring-brand-400"
               />
-              <label
-                htmlFor="featured"
-                className="text-sm font-medium text-neutral-700"
-              >
-                精選文章
-              </label>
-            </div>
+              設為精選文章
+            </label>
+          </div>
+        </section>
 
-            {/* 內容編輯區 - 分割式預覽 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="content"
-                  className="text-sm font-medium text-neutral-700"
-                >
-                  內容 <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  {uploadStatus.type !== 'idle' && (
-                    <span
-                      className={`text-xs ${uploadStatus.type === 'uploading'
-                          ? 'text-blue-600'
-                          : uploadStatus.type === 'success'
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}
-                    >
-                      {uploadStatus.message}
-                    </span>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!formData.slug || uploadStatus.type === 'uploading'}
-                  >
-                    📷 插入圖片
-                  </Button>
-                </div>
-              </div>
+        <section className="rounded-2xl border border-neutral-200 bg-white/90 p-6 shadow-sm">
+          <MarkdownEditor
+            value={formData.content}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, content: value }))
+            }
+            slug={formData.slug}
+            helperText="支援 MDX 格式，可直接拖放或貼上圖片。"
+          />
+        </section>
 
-              {/* 分割式編輯器 */}
-              <div className="grid gap-4 lg:grid-cols-2">
-                {/* 左側：Markdown 編輯區 */}
-                <div
-                  className={`relative rounded-md border ${isDragging
-                      ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-400/20'
-                      : 'border-neutral-300'
-                    }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {isDragging && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-brand-500/10">
-                      <p className="text-lg font-medium text-brand-600">
-                        放開以上傳圖片
-                      </p>
-                    </div>
-                  )}
-                  <textarea
-                    ref={textareaRef}
-                    id="content"
-                    name="content"
-                    required
-                    rows={20}
-                    value={formData.content}
-                    onChange={handleChange}
-                    className="w-full rounded-md bg-background px-3 py-2 font-mono text-sm text-foreground placeholder:text-neutral-400 focus:outline-none"
-                    placeholder="MDX 內容...&#10;&#10;支援拖放圖片上傳"
-                  />
-                </div>
+        <section className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-6 text-sm text-neutral-600 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            小提示
+          </p>
+          <p className="mt-2">
+            首圖可直接拖進編輯器，會自動上傳並插入圖片語法。
+          </p>
+          <p className="mt-2">
+            建議在內容最上方放置摘要與重點，讓預覽更吸引人。
+          </p>
+        </section>
 
-                {/* 右側：即時預覽區 */}
-                <div className="rounded-md border border-neutral-300 bg-white p-4 overflow-auto" style={{ minHeight: '450px', maxHeight: '600px' }}>
-                  <div className="mb-2 border-b border-neutral-200 pb-2">
-                    <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                      預覽
-                    </span>
-                  </div>
-                  {formData.content ? (
-                    <div
-                      className="prose prose-neutral max-w-none text-sm"
-                      dangerouslySetInnerHTML={{
-                        __html: renderMarkdownPreview(formData.content),
-                      }}
-                    />
-                  ) : (
-                    <p className="text-sm text-neutral-400 italic">
-                      在左側輸入內容以預覽...
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <p className="text-xs text-neutral-500">
-                支援 MDX 格式，可使用 Markdown 語法。直接拖放圖片到編輯區即可上傳。
-              </p>
-            </div>
-
-            <div className="flex gap-4">
-              <Button
-                type="submit"
-                disabled={status.type === 'loading'}
-              >
-                {status.type === 'loading' ? '發布中...' : '發布文章'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setFormData({
-                    title: '',
-                    slug: '',
-                    description: '',
-                    date: getTodayDate(),
-                    readTime: '',
-                    tags: '',
-                    featured: false,
-                    content: '',
-                  })
-                  setSlugEdited(false)
-                  setStatus({ type: 'idle' })
-                }}
-              >
-                清除表單
-              </Button>
-            </div>
-          </form>
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" disabled={status.type === 'loading'}>
+            {status.type === 'loading' ? '發布中...' : '發布文章'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setFormData({
+                title: '',
+                slug: '',
+                description: '',
+                date: getTodayDate(),
+                readTime: '',
+                tags: '',
+                featured: false,
+                content: '',
+              })
+              setSlugEdited(false)
+              setStatus({ type: 'idle' })
+            }}
+          >
+            清除表單
+          </Button>
         </div>
-      </section>
+      </form>
     </SiteShell>
   )
 }

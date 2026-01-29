@@ -83,13 +83,14 @@ export default function handler(
 
     // Update index.ts to remove the post
     const indexContent = fs.readFileSync(indexPath, 'utf-8')
+    const lineEnding = indexContent.includes('\r\n') ? '\r\n' : '\n'
 
     const componentName = slugToComponentName(slug)
     const frontmatterName = slugToFrontmatterName(slug)
 
     // Remove import statement (3 lines)
     const importPattern = new RegExp(
-      `import ${componentName}, \\{\\s*frontmatter as ${frontmatterName},\\s*\\} from '\\.\\/${slug}\\.mdx'\\n`,
+      `import ${componentName}, \\{\\s*frontmatter as ${frontmatterName},\\s*\\} from '\\.\\/${slug}\\.mdx'\\r?\\n`,
       'g'
     )
 
@@ -105,7 +106,7 @@ export default function handler(
       .replace(postEntryPattern, '')
 
     // Clean up any double newlines that might result from removal
-    updatedIndex = updatedIndex.replace(/\n{3,}/g, '\n\n')
+    updatedIndex = updatedIndex.replace(/(\r?\n){3,}/g, `${lineEnding}${lineEnding}`)
 
     fs.writeFileSync(indexPath, updatedIndex, 'utf-8')
 

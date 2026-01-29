@@ -103,6 +103,8 @@ ${content}
   try {
     let indexContent = fs.readFileSync(indexPath, 'utf-8')
 
+    const lineEnding = indexContent.includes('\r\n') ? '\r\n' : '\n'
+
     // Generate variable names from slug
     // e.g., "my-new-post" -> "MyNewPost" and "myNewPostFrontmatter"
     const pascalCase = slug
@@ -113,7 +115,7 @@ ${content}
     const frontmatterVar = `${camelCase}Frontmatter`
 
     // Find the last MDX import and insert after it
-    const importPattern = /} from '\.\/[a-z0-9-]+\.mdx'\n/g
+    const importPattern = /} from '\.\/[a-z0-9-]+\.mdx'\r?\n/g
     let lastImportMatch: RegExpExecArray | null = null
     let match: RegExpExecArray | null
     while ((match = importPattern.exec(indexContent)) !== null) {
@@ -129,9 +131,12 @@ ${content}
       })
     }
 
-    const newImport = `import ${pascalCase}, {
-  frontmatter as ${frontmatterVar},
-} from './${slug}.mdx'\n`
+    const newImport = [
+      `import ${pascalCase}, {`,
+      `  frontmatter as ${frontmatterVar},`,
+      `} from './${slug}.mdx'`,
+      '',
+    ].join(lineEnding)
 
     const insertImportPos = lastImportMatch.index + lastImportMatch[0].length
     indexContent =
@@ -140,7 +145,7 @@ ${content}
       indexContent.slice(insertImportPos)
 
     // Find "const posts: Post[] = [" and insert the new post after it
-    const postsArrayPattern = /const posts: Post\[\] = \[\n/
+    const postsArrayPattern = /const posts: Post\[\] = \[\r?\n/
     const postsMatch = postsArrayPattern.exec(indexContent)
 
     if (!postsMatch) {
@@ -152,18 +157,20 @@ ${content}
       })
     }
 
-    const newPostEntry = `  {
-    slug: '${slug}',
-    title: ${frontmatterVar}.title,
-    description: ${frontmatterVar}.description,
-    date: ${frontmatterVar}.date,
-    displayDate: formatDisplayDate(${frontmatterVar}.date),
-    readTime: ${frontmatterVar}.readTime,
-    tags: ${frontmatterVar}.tags ?? [],
-    featured: ${frontmatterVar}.featured ?? false,
-    Component: ${pascalCase},
-  },
-`
+    const newPostEntry = [
+      '  {',
+      `    slug: '${slug}',`,
+      `    title: ${frontmatterVar}.title,`,
+      `    description: ${frontmatterVar}.description,`,
+      `    date: ${frontmatterVar}.date,`,
+      `    displayDate: formatDisplayDate(${frontmatterVar}.date),`,
+      `    readTime: ${frontmatterVar}.readTime,`,
+      `    tags: ${frontmatterVar}.tags ?? [],`,
+      `    featured: ${frontmatterVar}.featured ?? false,`,
+      `    Component: ${pascalCase},`,
+      '  },',
+      '',
+    ].join(lineEnding)
 
     const insertPostPos = postsMatch.index + postsMatch[0].length
     indexContent =
